@@ -67,6 +67,7 @@ const Page = () => {
   };
 
   useEffect(() => {
+    const usernameFromUrl = query.get("username");
     const init = async () => {
       socketRef.current = await initSocket();
 
@@ -79,11 +80,11 @@ const Page = () => {
 
       socketRef.current.emit(ACTIONS.JOIN, {
         roomId,
-        username: query.get("username"),
+        username: usernameFromUrl,
       });
 
       socketRef.current.on(ACTIONS.JOINED, ({ clients, username }) => {
-        if (username !== query.get("username")) {
+        if (username !== usernameFromUrl) {
           toast.success(`${username} joined the room.`);
         }
         console.log(clients);
@@ -107,7 +108,8 @@ const Page = () => {
         }
       );
     };
-    init();
+
+    usernameFromUrl ? init() : handleLeaveRoom();
 
     return () => {
       if (socketRef.current) {
@@ -122,8 +124,9 @@ const Page = () => {
   return (
     <div className="flex">
       <Toaster />
-      <div className="coegle_editor w-full">
+      <div className="coegle_editor w-full h-screen">
         <Editor
+          height={"100vh"}
           path={file.name}
           defaultLanguage={"javascript"}
           defaultValue={file.value}
@@ -152,7 +155,7 @@ const Page = () => {
                     key={client.socketId}
                     className="flex flex-col justify-center items-center"
                   >
-                    <p className="rounded w-12 h-12 bg-[#f34dea] flex items-center justify-center">
+                    <p className="rounded w-10 h-10 bg-[#cd54f9] flex items-center justify-center">
                       {client.username && client.username[0]}
                     </p>
                     <p className="text-white mt-1">{client.username}</p>

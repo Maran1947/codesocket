@@ -13,8 +13,10 @@ export default function Home() {
   const notify = () =>
     toast.success("New room Id created successfully.", {
       style: {
+        border: '2px solid #00ff00',
         borderRadius: "10px",
         background: "#000",
+        padding: '0.5rem 0.8rem',
         color: "#00ff00",
       },
     });
@@ -46,7 +48,7 @@ export default function Home() {
   };
 
   return (
-    <main className="bg-[#38424c] flex min-h-screen flex-col items-center justify-between p-24">
+    <main className="bg-[#38424c] flex min-h-screen flex-col items-center justify-between py-24 px-10 sm:p-24">
       <Toaster position="top-right" reverseOrder={false} />
       <div className="w-full max-w-sm p-4 bg-black border border-gray-200 rounded-lg shadow sm:p-6 md:p-8 dark:bg-gray-800 dark:border-gray-700">
         <form
@@ -96,7 +98,7 @@ export default function Home() {
 
           <button
             type="submit"
-            className="w-full text-[#39277f] bg-[#7af948] hover:bg-[#6cd84199] focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+            className="w-full text-[#39277f] bg-[#7af948] hover:bg-[#6cd84199] font-medium rounded-lg text-sm px-5 py-2.5 text-center"
           >
             Join now
           </button>

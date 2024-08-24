@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Coegle: A Real-time Code Editor",
+  title: "CodeSocket: A Real-time Code Editor",
   description: "A real-time code edior",
 };
 
