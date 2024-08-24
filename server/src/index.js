@@ -4,6 +4,10 @@ import http from 'http';
 import { Server } from 'socket.io';
 import { ACTIONS } from './constants/actions.js';
 
+app.get('/', (req, res) => {
+    return res.status(200).send('Welcome to CodeSocket APIs')
+})
+
 const server = http.createServer(app);
 const io = new Server(server);
 
