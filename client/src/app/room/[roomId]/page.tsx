@@ -122,9 +122,9 @@ const Page = () => {
   }, []);
 
   return (
-    <div className="flex flex-col-reverse sm:flex-row-reverse">
+    <div className="flex flex-col-reverse md:flex-row">
       <Toaster />
-      <div className="coegle_editor w-full h-screen">
+      <div className="coegle_editor w-full md:w-[70%] lg:w-[80%] h-screen">
         <Editor
           height={"100vh"}
           path={file.name}
@@ -145,37 +145,43 @@ const Page = () => {
           }}
         />
       </div>
-      <div className="fixed w-full sm:w-[20%] sm:h-screen bg-[#171717]">
-        <div className="flex sm:flex-col justify-between sm:h-screen p-2 sm:p-4 items-center">
-          <div className='sm:hidden text-black w-[90px] h-8 flex items-center justify-center rounded bg-[#1eff29e7]'>Joined: {clients.length}</div>
-          <div className="hidden sm:flex gap-4 flex-wrap overflow-y-auto mb-5">
+      <div className="w-full md:w-[30%] lg:w-[20%] md:h-screen bg-[#171717]">
+        <div className="flex md:flex-col justify-between md:h-screen p-2 md:p-4 items-center">
+          <div className="md:hidden text-black w-[90px] h-8 flex items-center justify-center rounded bg-[#1eff29e7]">
+            Joined: {clients.length}
+          </div>
+          <div className="w-full hidden md:flex gap-4 flex-wrap overflow-y-auto mb-5 px-2">
+            <div className="text-black w-[90px] h-8 flex items-center justify-center rounded bg-[#1eff29e7]">
+              Joined: {clients.length}
+            </div>
+            <div className="w-full h-[0.5px] bg-white" ></div>
             {clients.length > 0 &&
               clients.map((client: any) => {
                 return (
                   <div
-                  key={client.socketId}
-                  className="flex flex-row gap-2 w-full px-2"
-                >
-                  <p className="rounded min-w-8 h-8 bg-[#cd54f9] flex items-center justify-center">
-                    {client.username && client.username[0]}
-                  </p>
-                  <p className="text-white mt-1">{client.username}</p>
-                </div>
+                    key={client.socketId}
+                    className="w-full flex flex-row items-center gap-2 px-2"
+                  >
+                    <p className="rounded min-w-8 h-8 bg-[#cd54f9] flex items-center justify-center">
+                      {client.username && client.username[0]}
+                    </p>
+                    <p className="text-white mt-1">{client.username}</p>
+                  </div>
                 );
               })}
           </div>
-          <div className="flex flex-row sm:flex-col sm:w-3/4 sm:mx-auto">
+          <div className="flex flex-row md:flex-col md:w-3/4 md:mx-auto">
             <button
               onClick={handleCopyRoomId}
               type="button"
-              className="h-8 w-[80px] sm:w-full sm:h-10 sm:py-2.5 me-2 sm:mb-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+              className="h-8 w-[80px] md:w-full md:h-10 md:py-2.5 me-2 md:mb-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
             >
               Copy ID
             </button>
             <button
               onClick={handleLeaveRoom}
               type="button"
-              className="h-8 w-[80px] sm:w-full sm:h-10 text-sm sm:py-2.5 me-2 sm:mb-2  text-white bg-[#b81313] hover:bg-[#f35151aa] focus:ring-4 focus:ring-blue-300 font-medium rounded-lg focus:outline-none"
+              className="h-8 w-[80px] md:w-full md:h-10 text-sm md:py-2.5 me-2 md:mb-2  text-white bg-[#b81313] hover:bg-[#f35151aa] focus:ring-4 focus:ring-blue-300 font-medium rounded-lg focus:outline-none"
             >
               Leave
             </button>
