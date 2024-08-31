@@ -5,7 +5,7 @@ import ArrowIcon from "@mui/icons-material/ArrowForwardIosOutlined";
 import CreateNewFolderOutlinedIcon from "@mui/icons-material/CreateNewFolderOutlined";
 import CreaterNewFileOutlinedIcon from "@mui/icons-material/NoteAddOutlined";
 import { IFile } from "@/interfaces/IFile";
-import { getTruncateDescription } from "@/utils/truncate";
+import { getLanguageByFileExtension } from "@/utils/getLanguageByExt";
 
 interface FileExplorereNodeProps {
   fileExplorerNode: IFileExplorerNode;
@@ -52,7 +52,7 @@ const FileExplorerNode = ({
     const file = {
       name: fileExplorerNode.name,
       content: "",
-      language: "javascript",
+      language: getLanguageByFileExtension(fileExplorerNode.name.split('.')[1]),
       path: fileExplorerNode.path,
     };
     setActiveFile(file);
@@ -73,14 +73,15 @@ const FileExplorerNode = ({
     });
   };
 
-  const onAddFolder = (e: any) => {
-    if (e.keyCode === 13 && e.target.value) {
-      const filename = e.target.value;
+  const onAddFolder = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const value = (e.target as HTMLInputElement).value;
+    if (e.code === "Enter" && value) {
+      const filename = value;
       if (isFileAlreadyExists(filename, fileExplorerNode)) {
         alert(`${filename} is already exists.`);
         return;
       }
-      handleInsertNode(fileExplorerNode.id, e.target.value, showInput.isFolder);
+      handleInsertNode(fileExplorerNode.id, value, showInput.isFolder);
       setShowInput({ ...showInput, visible: false });
     }
   };

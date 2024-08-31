@@ -10,23 +10,23 @@ import { Socket } from "socket.io-client";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import SourceIcon from "@mui/icons-material/Source";
 import Peoples from "@/app/components/Peoples";
-import FileExplorer from "@/app/components/file_explorer/FileExplorer";
+import FileExplorer from "@/app/components/fileExplorer/FileExplorer";
 import CloseIcon from "@mui/icons-material/Close";
 import { IFileExplorerNode } from "@/interfaces/IFileExplorerNode";
 import { IFile } from "@/interfaces/IFile";
 import { IDataPayload } from "@/interfaces/IDataPayload";
 import { v4 as uuid } from "uuid";
 
-const filesContentMap = new Map<string, IFile>()
+const filesContentMap = new Map<string, IFile>();
 
 const initialActiveFile = {
   name: "index.js",
   language: "javascript",
   content: `console.log(\`You are awesome 🤟\`)`,
   path: "/root/index.js",
-}
+};
 
-filesContentMap.set(initialActiveFile.path, initialActiveFile)
+filesContentMap.set(initialActiveFile.path, initialActiveFile);
 
 const Page = () => {
   const params = useParams();
@@ -68,13 +68,15 @@ const Page = () => {
         content: content ?? "",
       },
     };
-    
-    filesContentMap.set(activeFile.path, { ...activeFile, content: content ?? '' })
+
+    filesContentMap.set(activeFile.path, {
+      ...activeFile,
+      content: content ?? "",
+    });
     socketRef.current!.emit(ACTIONS.CODE_CHANGE, {
       roomId,
       payload: dataPayload,
     });
-    
   }
 
   function handleEditorDidMount(editor: any, monaco: any) {
@@ -93,11 +95,11 @@ const Page = () => {
     setActiveTab(tabId);
   };
 
-  const handleCloseFile = (file: IFile) => {
+  const handleCloseFile = (e: React.MouseEvent, file: IFile) => {
+    e.stopPropagation();
     const currentFiles = files.filter(
       (currentFile) => currentFile.path !== file.path
     );
-    setFiles(currentFiles);
     setActiveFile(
       currentFiles.length > 0
         ? currentFiles[0]
@@ -108,15 +110,12 @@ const Page = () => {
             path: "",
           }
     );
+    setFiles(currentFiles);
   };
 
   const handleChangeActiveFile = (file: IFile) => {
     setActiveFile(file);
   };
-
-  // useEffect(() => {
-  //   setActiveTab(window.innerWidth <= 768 ? 1 : activeTab);
-  // }, []);
 
   useEffect(() => {
     const usernameFromUrl = query.get("username");
@@ -158,7 +157,7 @@ const Page = () => {
           // setActiveFile(payload.activeFile);
           setFileExplorerData(payload.fileExplorerData);
           // setFiles(payload.openFiles);
-          filesContentMap.set(payload.activeFile.path, payload.activeFile)
+          filesContentMap.set(payload.activeFile.path, payload.activeFile);
         }
       );
     };
@@ -174,10 +173,6 @@ const Page = () => {
       }
     };
   }, []);
-
-  useEffect(() => {
-    console.log('MAP: ', filesContentMap)
-  }, [filesContentMap])
 
   return (
     <div className="flex flex-col md:flex-row">
@@ -232,7 +227,7 @@ const Page = () => {
               >
                 <span>{file.name}</span>
                 <CloseIcon
-                  onClick={() => handleCloseFile(file)}
+                  onClick={(e) => handleCloseFile(e, file)}
                   className="cursor-pointer"
                   sx={{ fontSize: "14px" }}
                 />
@@ -244,7 +239,7 @@ const Page = () => {
           <Editor
             height={"93vh"}
             path={activeFile.name}
-            defaultLanguage={"javascript"}
+            defaultLanguage={activeFile.language}
             defaultValue={activeFile.content}
             onChange={(value) => handleEditorChange(value)}
             onMount={handleEditorDidMount}
@@ -257,7 +252,7 @@ const Page = () => {
               fontSize: fontSize,
               cursorStyle: "line",
               lineNumbersMinChars: 4,
-              quickSuggestions: false,
+              quickSuggestions: true,
             }}
           />
         ) : (

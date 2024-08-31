@@ -1,6 +1,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
+import Avatar from "react-avatar";
 
 interface PeopleProps {
   clients: any[];
@@ -28,25 +29,23 @@ function Peoples({ clients, roomId }: PeopleProps) {
     <>
       <Toaster />
       <div className="flex md:flex-col justify-between md:h-screen p-2 md:p-4 items-center">
-        <div className="md:hidden text-black w-[90px] h-8 flex items-center justify-center rounded bg-[#1eff29e7]">
+        <div className="md:hidden text-black w-[90px] h-8 flex items-center justify-center rounded bg-[#fec76f]">
           Joined: {clients.length}
         </div>
         <div className="w-full hidden md:flex gap-4 flex-wrap overflow-y-auto mb-5 px-2">
-          <div className="text-black w-[90px] h-8 flex items-center justify-center rounded bg-[#1eff29e7]">
+          <div className="text-black w-[90px] h-8 flex items-center justify-center rounded bg-[#fec76f]">
             Joined: {clients.length}
           </div>
-          <div className="w-full h-[0.5px] bg-white"></div>
+          <div className="w-full h-[0.5px] bg-[#aaaaaa] flex flex-row"></div>
           {clients.length > 0 &&
             clients.map((client: any) => {
               return (
                 <div
                   key={client.socketId}
-                  className="w-full flex flex-row items-center gap-2 px-2"
+                  className="flex flex-row items-center gap-2 px-2"
                 >
-                  <p className="rounded min-w-8 h-8 bg-[#cd54f9] flex items-center justify-center">
-                    {client.username && client.username[0]}
-                  </p>
-                  <p className="text-white mt-1">{client.username}</p>
+                  <Avatar name={client.username} size={"30"} />
+                  <p className="text-[white] mt-1">{client.username}</p>
                 </div>
               );
             })}
