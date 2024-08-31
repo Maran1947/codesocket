@@ -1,19 +1,32 @@
 "use client";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
-import Editor, { useMonaco } from "@monaco-editor/react";
-import files from "@/app/helpers/files";
+import Editor from "@monaco-editor/react";
 import "./page.css";
 import { initSocket } from "@/socket";
 import { ACTIONS } from "@/app/helpers/Actions";
 import toast, { Toaster } from "react-hot-toast";
 import { Socket } from "socket.io-client";
+import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
+import SourceIcon from "@mui/icons-material/Source";
+import Peoples from "@/app/components/Peoples";
+import FileExplorer from "@/app/components/file_explorer/FileExplorer";
+import CloseIcon from "@mui/icons-material/Close";
+import { IFileExplorerNode } from "@/interfaces/IFileExplorerNode";
+import { IFile } from "@/interfaces/IFile";
+import { IDataPayload } from "@/interfaces/IDataPayload";
+import { v4 as uuid } from "uuid";
 
-type FileType = {
-  name: string;
-  langauge: string;
-  value: string;
-};
+const filesContentMap = new Map<string, IFile>()
+
+const initialActiveFile = {
+  name: "index.js",
+  language: "javascript",
+  content: `console.log(\`You are awesome 🤟\`)`,
+  path: "/root/index.js",
+}
+
+filesContentMap.set(initialActiveFile.path, initialActiveFile)
 
 const Page = () => {
   const params = useParams();
@@ -23,25 +36,45 @@ const Page = () => {
   const { roomId } = params;
 
   const [clients, setClients] = useState([]);
+  const [activeTab, setActiveTab] = useState(0);
+  const [fontSize, setFontSize] = useState(18);
+  const [activeFile, setActiveFile] = useState(initialActiveFile);
+  const [files, setFiles] = useState([initialActiveFile]);
+  const [fileExplorerData, setFileExplorerData] = useState<IFileExplorerNode>({
+    id: uuid(),
+    name: "root",
+    isFolder: true,
+    path: "/root",
+    nodes: [
+      {
+        id: uuid(),
+        name: "index.js",
+        isFolder: false,
+        nodes: [],
+        path: "/root/index.js",
+      },
+    ],
+  });
 
   const editorRef = useRef(null);
   const socketRef = useRef<Socket | null>(null);
 
-  const [code, setCode] = useState("");
-
-  const [fileName, setFileName] = useState("script.js");
-
-  const file: FileType = files[fileName];
-
-  const [open, setOpen] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [fontSize, setFontSize] = useState(18);
-
-  function handleEditorChange(value: string | undefined, file: FileType) {
+  function handleEditorChange(content: string | undefined) {
+    const dataPayload: IDataPayload = {
+      fileExplorerData,
+      openFiles: files,
+      activeFile: {
+        ...activeFile,
+        content: content ?? "",
+      },
+    };
+    
+    filesContentMap.set(activeFile.path, { ...activeFile, content: content ?? '' })
     socketRef.current!.emit(ACTIONS.CODE_CHANGE, {
       roomId,
-      code: value,
+      payload: dataPayload,
     });
+    
   }
 
   function handleEditorDidMount(editor: any, monaco: any) {
@@ -52,19 +85,38 @@ const Page = () => {
     console.log("Socket error: ", err);
   };
 
-  const handleCopyRoomId = async () => {
-    try {
-      await navigator.clipboard.writeText(roomId as string);
-      toast.success("Room ID has been copied to your clipboard");
-    } catch (err) {
-      toast.error("Could not copied the Room ID");
-      console.log(err);
-    }
-  };
-
   const handleLeaveRoom = () => {
     router.replace("/");
   };
+
+  const handleTabChange = (tabId: number) => {
+    setActiveTab(tabId);
+  };
+
+  const handleCloseFile = (file: IFile) => {
+    const currentFiles = files.filter(
+      (currentFile) => currentFile.path !== file.path
+    );
+    setFiles(currentFiles);
+    setActiveFile(
+      currentFiles.length > 0
+        ? currentFiles[0]
+        : {
+            name: "",
+            content: "",
+            language: "",
+            path: "",
+          }
+    );
+  };
+
+  const handleChangeActiveFile = (file: IFile) => {
+    setActiveFile(file);
+  };
+
+  // useEffect(() => {
+  //   setActiveTab(window.innerWidth <= 768 ? 1 : activeTab);
+  // }, []);
 
   useEffect(() => {
     const usernameFromUrl = query.get("username");
@@ -87,7 +139,6 @@ const Page = () => {
         if (username !== usernameFromUrl) {
           toast.success(`${username} joined the room.`);
         }
-        console.log(clients);
         setClients(clients);
       });
 
@@ -103,8 +154,11 @@ const Page = () => {
 
       socketRef.current.on(
         ACTIONS.CODE_CHANGE,
-        ({ code }: { code: string }) => {
-          setCode(code);
+        ({ payload }: { payload: IDataPayload }) => {
+          // setActiveFile(payload.activeFile);
+          setFileExplorerData(payload.fileExplorerData);
+          // setFiles(payload.openFiles);
+          filesContentMap.set(payload.activeFile.path, payload.activeFile)
         }
       );
     };
@@ -121,72 +175,96 @@ const Page = () => {
     };
   }, []);
 
+  useEffect(() => {
+    console.log('MAP: ', filesContentMap)
+  }, [filesContentMap])
+
   return (
-    <div className="flex flex-col-reverse md:flex-row">
-      <Toaster />
-      <div className="coegle_editor w-full md:w-[70%] lg:w-[80%] h-screen">
-        <Editor
-          height={"100vh"}
-          path={file.name}
-          defaultLanguage={"javascript"}
-          defaultValue={file.value}
-          onChange={(value) => handleEditorChange(value, file)}
-          onMount={handleEditorDidMount}
-          value={code}
-          theme={"vs-dark"}
-          options={{
-            minimap: {
-              enabled: false,
-            },
-            fontSize: fontSize,
-            cursorStyle: "line",
-            lineNumbersMinChars: 4,
-            quickSuggestions: false,
+    <div className="flex flex-col md:flex-row">
+      <div className="hidden md:w-[4.5%] md:h-screen bg-[#2d2a2a] border-r border-r-[#4e4b4b] py-5 md:flex flex-col items-center gap-3">
+        <SourceIcon
+          onClick={() => handleTabChange(0)}
+          sx={{
+            cursor: "pointer",
+            fontSize: "2rem",
+            color: activeTab === 0 ? "#ffe200" : "#8c7f91",
+            "&:hover": { color: "#ffe200" },
+          }}
+        />
+        <PeopleAltIcon
+          onClick={() => handleTabChange(1)}
+          sx={{
+            cursor: "pointer",
+            fontSize: "2rem",
+            color: activeTab === 1 ? "#ffe200" : "#8c7f91",
+            "&:hover": { color: "#ffe200" },
           }}
         />
       </div>
-      <div className="w-full md:w-[30%] lg:w-[20%] md:h-screen bg-[#171717]">
-        <div className="flex md:flex-col justify-between md:h-screen p-2 md:p-4 items-center">
-          <div className="md:hidden text-black w-[90px] h-8 flex items-center justify-center rounded bg-[#1eff29e7]">
-            Joined: {clients.length}
-          </div>
-          <div className="w-full hidden md:flex gap-4 flex-wrap overflow-y-auto mb-5 px-2">
-            <div className="text-black w-[90px] h-8 flex items-center justify-center rounded bg-[#1eff29e7]">
-              Joined: {clients.length}
-            </div>
-            <div className="w-full h-[0.5px] bg-white" ></div>
-            {clients.length > 0 &&
-              clients.map((client: any) => {
-                return (
-                  <div
-                    key={client.socketId}
-                    className="w-full flex flex-row items-center gap-2 px-2"
-                  >
-                    <p className="rounded min-w-8 h-8 bg-[#cd54f9] flex items-center justify-center">
-                      {client.username && client.username[0]}
-                    </p>
-                    <p className="text-white mt-1">{client.username}</p>
-                  </div>
-                );
-              })}
-          </div>
-          <div className="flex flex-row md:flex-col md:w-3/4 md:mx-auto">
-            <button
-              onClick={handleCopyRoomId}
-              type="button"
-              className="h-8 w-[80px] md:w-full md:h-10 md:py-2.5 me-2 md:mb-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
-            >
-              Copy ID
-            </button>
-            <button
-              onClick={handleLeaveRoom}
-              type="button"
-              className="h-8 w-[80px] md:w-full md:h-10 text-sm md:py-2.5 me-2 md:mb-2  text-white bg-[#b81313] hover:bg-[#f35151aa] focus:ring-4 focus:ring-blue-300 font-medium rounded-lg focus:outline-none"
-            >
-              Leave
-            </button>
-          </div>
+      <div className="w-full md:w-[30%] lg:w-[30%] md:h-screen bg-[#right] border-r border-r-[#605c5c]">
+        {activeTab === 0 && (
+          <FileExplorer
+            fileExplorerData={fileExplorerData}
+            setFileExplorerData={setFileExplorerData}
+            activeFile={activeFile}
+            setActiveFile={setActiveFile}
+            files={files}
+            setFiles={setFiles}
+          />
+        )}
+        {activeTab === 1 && (
+          <Peoples clients={clients} roomId={roomId as string} />
+        )}
+      </div>
+      <div className="coegle_editor w-full md:w-[70%] h-screen">
+        <div className="h-[5vh] w-full flex overflow-y-auto mb-2">
+          {files.map((file, index) => {
+            return (
+              <div
+                onClick={() => handleChangeActiveFile(file)}
+                key={file.path + index}
+                className={
+                  "cursor-pointer flex gap-2 items-center px-3 py-1 text-sm " +
+                  (activeFile.path === file.path
+                    ? "text-[#fec76f] bg-[#473e3e]"
+                    : "text-[#aaaaaa] bg-[#473e3e]")
+                }
+              >
+                <span>{file.name}</span>
+                <CloseIcon
+                  onClick={() => handleCloseFile(file)}
+                  className="cursor-pointer"
+                  sx={{ fontSize: "14px" }}
+                />
+              </div>
+            );
+          })}
         </div>
+        {activeFile.name && files.length > 0 ? (
+          <Editor
+            height={"93vh"}
+            path={activeFile.name}
+            defaultLanguage={"javascript"}
+            defaultValue={activeFile.content}
+            onChange={(value) => handleEditorChange(value)}
+            onMount={handleEditorDidMount}
+            value={filesContentMap.get(activeFile.path)?.content}
+            theme={"vs-dark"}
+            options={{
+              minimap: {
+                enabled: false,
+              },
+              fontSize: fontSize,
+              cursorStyle: "line",
+              lineNumbersMinChars: 4,
+              quickSuggestions: false,
+            }}
+          />
+        ) : (
+          <div className="text-xl text-[#aaaaaa] flex items-center justify-center h-[93vh]">
+            No file is open.
+          </div>
+        )}
       </div>
     </div>
   );
