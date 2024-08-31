@@ -34,10 +34,10 @@ export const useTraverseTree = () => {
     }
 
     const updatedNodes = fileExplorerNode.nodes
-      .map((node) => deleteNode(nodeId, node))
+      .map((node): IFileExplorerNode | null => deleteNode(nodeId, node))
       .filter((node) => node !== null);
 
-    return { ...fileExplorerNode, nodes: updatedNodes };
+    return { ...fileExplorerNode, nodes: updatedNodes as IFileExplorerNode[] };
   };
 
   return { insertNode, deleteNode };
