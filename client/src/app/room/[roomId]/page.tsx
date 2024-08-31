@@ -55,6 +55,7 @@ const Page = () => {
       },
     ],
   });
+  const [isFileExplorerUpdated, setIsFileExplorerUpdated] = useState(false);
 
   const editorRef = useRef(null);
   const socketRef = useRef<Socket | null>(null);
@@ -97,20 +98,29 @@ const Page = () => {
 
   const handleCloseFile = (e: React.MouseEvent, file: IFile) => {
     e.stopPropagation();
-    const currentFiles = files.filter(
+    const updatedOpenFile = files.filter(
       (currentFile) => currentFile.path !== file.path
     );
-    setActiveFile(
-      currentFiles.length > 0
-        ? currentFiles[0]
+    const updatedActiveFile =
+      updatedOpenFile.length > 0
+        ? updatedOpenFile[0]
         : {
             name: "",
             content: "",
             language: "",
             path: "",
-          }
-    );
-    setFiles(currentFiles);
+          };
+    setActiveFile(updatedActiveFile);
+    setFiles(updatedOpenFile);
+    const dataPayload: IDataPayload = {
+      fileExplorerData,
+      openFiles: updatedOpenFile,
+      activeFile: updatedActiveFile,
+    };
+    socketRef.current!.emit(ACTIONS.CODE_CHANGE, {
+      roomId,
+      payload: dataPayload,
+    });
   };
 
   const handleChangeActiveFile = (file: IFile) => {
@@ -154,9 +164,10 @@ const Page = () => {
       socketRef.current.on(
         ACTIONS.CODE_CHANGE,
         ({ payload }: { payload: IDataPayload }) => {
-          // setActiveFile(payload.activeFile);
+          console.log("msg: ", payload);
+          setActiveFile(payload.activeFile);
           setFileExplorerData(payload.fileExplorerData);
-          // setFiles(payload.openFiles);
+          setFiles(payload.openFiles);
           filesContentMap.set(payload.activeFile.path, payload.activeFile);
         }
       );
@@ -174,8 +185,24 @@ const Page = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (isFileExplorerUpdated && socketRef.current) {
+      const dataPayload: IDataPayload = {
+        fileExplorerData,
+        openFiles: files,
+        activeFile,
+      };
+      socketRef.current!.emit(ACTIONS.CODE_CHANGE, {
+        roomId,
+        payload: dataPayload,
+      });
+      setIsFileExplorerUpdated(false);
+    }
+  }, [isFileExplorerUpdated]);
+
   return (
     <div className="flex flex-col md:flex-row">
+      <Toaster />
       <div className="hidden md:w-[4.5%] md:h-screen bg-[#2d2a2a] border-r border-r-[#4e4b4b] py-5 md:flex flex-col items-center gap-3">
         <SourceIcon
           onClick={() => handleTabChange(0)}
@@ -205,6 +232,8 @@ const Page = () => {
             setActiveFile={setActiveFile}
             files={files}
             setFiles={setFiles}
+            isFileExplorerUpdated={isFileExplorerUpdated}
+            setIsFileExplorerUpdated={setIsFileExplorerUpdated}
           />
         )}
         {activeTab === 1 && (

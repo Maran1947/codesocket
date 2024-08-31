@@ -14,18 +14,20 @@ interface FileExplorereNodeProps {
   setActiveFile: Dispatch<SetStateAction<IFile>>;
   files: IFile[];
   setFiles: Dispatch<SetStateAction<IFile[]>>;
+  isFileExplorerUpdated: boolean
+  setIsFileExplorerUpdated: Dispatch<SetStateAction<boolean>>
 }
 
 const isFileAlreadyExists = (
-  filename: string,
+  filePath: string,
   fileExplorerNode: IFileExplorerNode
 ): boolean => {
-  if (filename === fileExplorerNode.name) {
+  if (filePath === fileExplorerNode.path) {
     return true;
   }
 
   for (const file of fileExplorerNode.nodes) {
-    if (isFileAlreadyExists(filename, file)) {
+    if (isFileAlreadyExists(filePath, file)) {
       return true;
     }
   }
@@ -40,6 +42,8 @@ const FileExplorerNode = ({
   setActiveFile,
   files,
   setFiles,
+  isFileExplorerUpdated,
+  setIsFileExplorerUpdated
 }: FileExplorereNodeProps) => {
   const [displayNodeControls, setDisplayNodeControls] = useState(false);
   const [showInput, setShowInput] = useState({
@@ -77,12 +81,16 @@ const FileExplorerNode = ({
     const value = (e.target as HTMLInputElement).value;
     if (e.code === "Enter" && value) {
       const filename = value;
-      if (isFileAlreadyExists(filename, fileExplorerNode)) {
+      const filePath = `${fileExplorerNode.path}/${filename}`
+      if (isFileAlreadyExists(filePath, fileExplorerNode)) {
         alert(`${filename} is already exists.`);
         return;
       }
       handleInsertNode(fileExplorerNode.id, value, showInput.isFolder);
       setShowInput({ ...showInput, visible: false });
+      if (!isFileExplorerUpdated) {
+        setIsFileExplorerUpdated(true)
+      } 
     }
   };
 
@@ -142,6 +150,8 @@ const FileExplorerNode = ({
                 setActiveFile={setActiveFile}
                 files={files}
                 setFiles={setFiles}
+                isFileExplorerUpdated={isFileExplorerUpdated}
+                setIsFileExplorerUpdated={setIsFileExplorerUpdated}
               />
             );
           })}

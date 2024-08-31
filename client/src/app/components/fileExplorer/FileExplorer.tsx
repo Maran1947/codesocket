@@ -4,6 +4,7 @@ import FileExplorerNode from "./FileExplorerNode";
 import { Typography } from "@mui/material";
 import { IFileExplorerNode } from "@/interfaces/IFileExplorerNode";
 import { IFile } from "@/interfaces/IFile";
+import { Socket } from "socket.io-client";
 
 interface FileExplorerProps {
   fileExplorerData: IFileExplorerNode;
@@ -12,6 +13,8 @@ interface FileExplorerProps {
   setActiveFile: Dispatch<SetStateAction<IFile>>;
   files: IFile[];
   setFiles: Dispatch<SetStateAction<IFile[]>>;
+  isFileExplorerUpdated: boolean
+  setIsFileExplorerUpdated: Dispatch<SetStateAction<boolean>>
 }
 
 function FileExplorer({
@@ -21,6 +24,8 @@ function FileExplorer({
   setActiveFile,
   files,
   setFiles,
+  isFileExplorerUpdated,
+  setIsFileExplorerUpdated
 }: FileExplorerProps) {
   const { insertNode } = useTraverseTree();
 
@@ -49,6 +54,8 @@ function FileExplorer({
         setActiveFile={setActiveFile}
         files={files}
         setFiles={setFiles}
+        isFileExplorerUpdated={isFileExplorerUpdated}
+        setIsFileExplorerUpdated={setIsFileExplorerUpdated}
       />
     </div>
   );
