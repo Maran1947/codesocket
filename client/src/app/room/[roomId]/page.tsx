@@ -98,12 +98,12 @@ const Page = () => {
 
   const handleCloseFile = (e: React.MouseEvent, file: IFile) => {
     e.stopPropagation();
-    const updatedOpenFile = files.filter(
+    const updatedOpenFiles = files.filter(
       (currentFile) => currentFile.path !== file.path
     );
     const updatedActiveFile =
-      updatedOpenFile.length > 0
-        ? updatedOpenFile[0]
+      updatedOpenFiles.length > 0
+        ? updatedOpenFiles[0]
         : {
             name: "",
             content: "",
@@ -111,10 +111,10 @@ const Page = () => {
             path: "",
           };
     setActiveFile(updatedActiveFile);
-    setFiles(updatedOpenFile);
+    setFiles(updatedOpenFiles);
     const dataPayload: IDataPayload = {
       fileExplorerData,
-      openFiles: updatedOpenFile,
+      openFiles: updatedOpenFiles,
       activeFile: updatedActiveFile,
     };
     socketRef.current!.emit(ACTIONS.CODE_CHANGE, {
@@ -164,7 +164,6 @@ const Page = () => {
       socketRef.current.on(
         ACTIONS.CODE_CHANGE,
         ({ payload }: { payload: IDataPayload }) => {
-          console.log("msg: ", payload);
           setActiveFile(payload.activeFile);
           setFileExplorerData(payload.fileExplorerData);
           setFiles(payload.openFiles);

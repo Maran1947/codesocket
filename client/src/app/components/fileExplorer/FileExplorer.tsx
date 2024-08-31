@@ -1,10 +1,9 @@
-import React, { Dispatch, SetStateAction, useState } from "react";
+import React, { Dispatch, SetStateAction } from "react";
 import { useTraverseTree } from "@/hooks/useTraverseTree";
 import FileExplorerNode from "./FileExplorerNode";
 import { Typography } from "@mui/material";
 import { IFileExplorerNode } from "@/interfaces/IFileExplorerNode";
 import { IFile } from "@/interfaces/IFile";
-import { Socket } from "socket.io-client";
 
 interface FileExplorerProps {
   fileExplorerData: IFileExplorerNode;
@@ -13,8 +12,8 @@ interface FileExplorerProps {
   setActiveFile: Dispatch<SetStateAction<IFile>>;
   files: IFile[];
   setFiles: Dispatch<SetStateAction<IFile[]>>;
-  isFileExplorerUpdated: boolean
-  setIsFileExplorerUpdated: Dispatch<SetStateAction<boolean>>
+  isFileExplorerUpdated: boolean;
+  setIsFileExplorerUpdated: Dispatch<SetStateAction<boolean>>;
 }
 
 function FileExplorer({
@@ -25,17 +24,43 @@ function FileExplorer({
   files,
   setFiles,
   isFileExplorerUpdated,
-  setIsFileExplorerUpdated
+  setIsFileExplorerUpdated,
 }: FileExplorerProps) {
-  const { insertNode } = useTraverseTree();
+  const { insertNode, deleteNode } = useTraverseTree();
 
   const handleInsertNode = (
     folderId: string,
     item: string,
     isFolder: boolean
   ) => {
-    const finalTree = insertNode(fileExplorerData, folderId, item, isFolder);
-    setFileExplorerData(finalTree);
+    const updatedFileExplorerData = insertNode(
+      fileExplorerData,
+      folderId,
+      item,
+      isFolder
+    );
+    setFileExplorerData(updatedFileExplorerData);
+  };
+
+  const handleDeleteNode = (nodeId: string, nodePath: string) => {
+    const updatedFileExplorerData = deleteNode(nodeId, fileExplorerData);
+    if (updatedFileExplorerData !== null) {
+      setFileExplorerData(updatedFileExplorerData);
+
+      const updatedOpenFiles = files.filter((file) => file.path !== nodePath);
+      const updatedActiveFile =
+        updatedOpenFiles.length > 0
+          ? updatedOpenFiles[0]
+          : {
+              name: "",
+              content: "",
+              language: "",
+              path: "",
+            };
+      setActiveFile(updatedActiveFile);
+      setFiles(updatedOpenFiles);
+      setIsFileExplorerUpdated(true)
+    }
   };
 
   return (
@@ -49,6 +74,7 @@ function FileExplorer({
       </Typography>
       <FileExplorerNode
         handleInsertNode={handleInsertNode}
+        handleDeleteNode={handleDeleteNode}
         fileExplorerNode={fileExplorerData}
         activeFile={activeFile}
         setActiveFile={setActiveFile}

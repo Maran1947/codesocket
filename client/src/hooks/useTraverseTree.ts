@@ -25,5 +25,20 @@ export const useTraverseTree = () => {
     return { ...fileExplorerNode, nodes: latestNodes };
   };
 
-  return { insertNode };
+  const deleteNode = (
+    nodeId: string,
+    fileExplorerNode: IFileExplorerNode
+  ): IFileExplorerNode | null => {
+    if (nodeId === fileExplorerNode.id) {
+      return null;
+    }
+
+    const updatedNodes = fileExplorerNode.nodes
+      .map((node) => deleteNode(nodeId, node))
+      .filter((node) => node !== null);
+
+    return { ...fileExplorerNode, nodes: updatedNodes };
+  };
+
+  return { insertNode, deleteNode };
 };

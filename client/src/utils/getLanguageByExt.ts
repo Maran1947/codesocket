@@ -23,7 +23,6 @@ const extensionToLanguageMap: { [key: string]: string } = {
 };
 
 const getLanguageByFileExtension = (extension: string) => {
-  console.log(extension, extensionToLanguageMap[extension])
   return extensionToLanguageMap[extension];
 };
 
