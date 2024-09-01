@@ -1,5 +1,11 @@
 "use client";
-import { FormEvent, KeyboardEvent, useState } from "react";
+import {
+  FormEvent,
+  KeyboardEvent,
+  useEffect,
+  useState,
+  useTransition,
+} from "react";
 import { v4 as uuid } from "uuid";
 import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -7,19 +13,14 @@ import { useRouter } from "next/navigation";
 export default function Home() {
   const [roomId, setRoomId] = useState("");
   const [username, setUsername] = useState("");
+  const [isPending, startTransition] = useTransition();
+  const [toastId, setToastId] = useState("");
 
   const router = useRouter();
 
-  const notify = () =>
-    toast.success("New room Id created successfully.", {
-      style: {
-        border: '2px solid #00ff00',
-        borderRadius: "10px",
-        background: "#000",
-        padding: '0.5rem 0.8rem',
-        color: "#00ff00",
-      },
-    });
+  const notify = () => {
+    toast.success("New room Id created successfully.");
+  };
 
   const handleCreateRoom = () => {
     const id = uuid();
@@ -38,7 +39,11 @@ export default function Home() {
   const handleJoinRoom = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    router.replace(`/room/${roomId}?username=${username}`);
+    startTransition(() => {
+      const toastId = toast.loading("Joining...");
+      setToastId(toastId);
+      router.replace(`/room/${roomId}?username=${username}&toastId=${toastId}`);
+    });
   };
 
   const handleInputEnter = (e: KeyboardEvent<HTMLFormElement>) => {
@@ -47,16 +52,29 @@ export default function Home() {
     }
   };
 
+  useEffect(() => {
+    if (!isPending && toastId) {
+      toast.dismiss(toastId);
+    }
+  }, [isPending]);
+
   return (
-    <main className="bg-[#38424c] flex min-h-screen flex-col items-center justify-between py-24 px-10 sm:p-24">
+    <main className="bg-[#17181d] flex min-h-screen flex-col items-center justify-between py-24 px-10 sm:p-24">
       <Toaster position="top-right" reverseOrder={false} />
-      <div className="w-full max-w-sm p-4 bg-black border border-gray-200 rounded-lg shadow sm:p-6 md:p-8 dark:bg-gray-800 dark:border-gray-700">
+      <div
+        style={{
+          background:
+            "radial-gradient(circle at 65% 15%, #ea76bf 1%, #cb4bb6 30%, #bf3ab3 60%, #8b269e 100%)",
+        }}
+        className="w-[150px] h-[150px] absolute rounded-full -top-10 left-1/4 sm:-top-5 sm:left-1/4"
+      ></div>
+      <div className="z-10 w-full max-w-sm p-4 bg-transparent border border-gray-200 rounded-lg shadow sm:p-6 md:p-8 dark:border-gray-700">
         <form
           className="space-y-6"
           onSubmit={handleJoinRoom}
           onKeyUp={(e) => handleInputEnter(e)}
         >
-          <h5 className="text-xl font-medium text-gray-900 dark:text-white">
+          <h5 className="text-xl font-semibold text-gray-900 dark:text-white">
             Join room
           </h5>
           <div>
@@ -98,15 +116,15 @@ export default function Home() {
 
           <button
             type="submit"
-            className="w-full text-[#39277f] bg-[#7af948] hover:bg-[#6cd84199] font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+            className="w-full text-white font-bold bg-gradient-to-r from-[#ad2ca0] to-[#dc64b8] hover:bg-gradient-to-br  rounded-lg text-sm px-5 py-2.5 text-center"
           >
-            Join now
+            Join now.
           </button>
           <div className="text-sm font-medium text-gray-500 dark:text-gray-300">
             Don&apos;t have an invitation?{" "}
             <span
               onClick={handleCreateRoom}
-              className="cursor-pointer text-[#5eff00] hover:underline"
+              className="cursor-pointer text-[#f972d1] hover:underline"
             >
               Create room
             </span>

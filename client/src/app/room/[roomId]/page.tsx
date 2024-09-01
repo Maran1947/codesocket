@@ -129,6 +129,9 @@ const Page = () => {
 
   useEffect(() => {
     const usernameFromUrl = query.get("username");
+    const toastId = query.get("toastId")
+    toast.dismiss(toastId!)
+
     const init = async () => {
       socketRef.current = await initSocket();
 

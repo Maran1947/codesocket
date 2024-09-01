@@ -88,20 +88,24 @@ const FileExplorerNode = ({
     handleDeleteNode(fileExplorerNode.id, fileExplorerNode.path);
   };
 
-  const onAddFolder = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleAddNode = (value: string) => {
+    const filename = value;
+    const filePath = `${fileExplorerNode.path}/${filename}`;
+    if (isFileAlreadyExists(filePath, fileExplorerNode)) {
+      alert(`${filename} is already exists.`);
+      return;
+    }
+    handleInsertNode(fileExplorerNode.id, value, showInput.isFolder);
+    setShowInput({ ...showInput, visible: false });
+    if (!isFileExplorerUpdated) {
+      setIsFileExplorerUpdated(true);
+    }
+  }
+
+  const onAddFolderOrFile = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const value = (e.target as HTMLInputElement).value;
     if (e.code === "Enter" && value) {
-      const filename = value;
-      const filePath = `${fileExplorerNode.path}/${filename}`;
-      if (isFileAlreadyExists(filePath, fileExplorerNode)) {
-        alert(`${filename} is already exists.`);
-        return;
-      }
-      handleInsertNode(fileExplorerNode.id, value, showInput.isFolder);
-      setShowInput({ ...showInput, visible: false });
-      if (!isFileExplorerUpdated) {
-        setIsFileExplorerUpdated(true);
-      }
+      handleAddNode(value)
     }
   };
 
@@ -140,17 +144,17 @@ const FileExplorerNode = ({
             <div className="flex gap-2 items-center">
               <span>
                 {showInput.isFolder ? (
-                  <ArrowIcon className="text-sm" />
+                  <ArrowIcon sx={{ fontSize: '14px' }} />
                 ) : (
-                  <FileIcon className="text-sm" />
+                  <FileIcon sx={{ fontSize: '14px' }} />
                 )}
               </span>
               <input
                 autoFocus
-                onKeyDown={onAddFolder}
+                onKeyDown={onAddFolderOrFile}
                 onBlur={() => setShowInput({ ...showInput, visible: false })}
                 type="text"
-                className="text-[#fec76f] outline-none px-2 bg-[#f9f5f526]"
+                className="w-full text-[#fec76f] outline-none px-2 bg-[#f9f5f526]"
               />
             </div>
           )}
@@ -192,12 +196,6 @@ const FileExplorerNode = ({
         </span>
         {displayNodeControls && (
           <div className="flex items-center gap-1">
-            <CreateNewFolderOutlinedIcon
-              onClick={(e) => handleNewFolder(e, true)}
-            />
-            <CreaterNewFileOutlinedIcon
-              onClick={(e) => handleNewFolder(e, false)}
-            />
             <DeleteOutlineOutlinedIcon onClick={(e) => onDeleteNode(e)} />
           </div>
         )}
