@@ -1,6 +1,6 @@
-import { executeCompiler } from "./compiler/compiler.js";
 import fileUtils from "../utils/file_utils.js";
 import { createJob, getJobById } from "./controllers/jobController.js";
+import { addJobToQueue } from "./jobQueue.js";
 
 const initApiRoutes = (app) => {
   app.get("/", (_req, res) => {
@@ -14,20 +14,9 @@ const initApiRoutes = (app) => {
       const filePath = await fileUtils.generateFile(extension, code);
 
       job = await createJob({ filePath, language });
+      await addJobToQueue(job._id);
       res.status(201).json({ success: true, jobId: job._id });
-
-      job.startedAt = new Date();
-      const response = await executeCompiler(filePath, language);
-      job.completedAt = new Date();
-      job.status = "success";
-      job.output = response;
-
-      await job.save();
     } catch (error) {
-      job.status = "failed";
-      job.output = JSON.stringify(error);
-      await job.save();
-      console.log(error);
       return res.status(500).json({ error });
     }
   });
