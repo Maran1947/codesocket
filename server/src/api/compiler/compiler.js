@@ -1,11 +1,11 @@
 import { exec } from "child_process";
 import path from "path";
-import fileUtils from "../utils/file_utils.js";
+import fileUtils from "../../utils/file_utils.js";
 
 const executeCode = async (filePath, language) => {
   await fileUtils.createDir("outputs");
-  let executeCodeCommand = null;
 
+  let executeCodeCommand = null;
   switch (language) {
     case "cpp":
       const filename = path.basename(filePath).split(".")[0];
@@ -31,8 +31,7 @@ const executeCode = async (filePath, language) => {
   });
 };
 
-const executeCompiler = async (language, extension, code) => {
-  const filePath = await fileUtils.generateFile(extension, code);
+const executeCompiler = async (filePath, language) => {
   const response = await executeCode(filePath, language)
   // await fileUtils.removeDir('codes')
   // await fileUtils.removeDir('outputs')
