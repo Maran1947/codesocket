@@ -32,6 +32,10 @@ NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
 .env:
 NEXT_PUBLIC_BACKEND_URL=<YOUR_HOSTED_BACKEND_URL>
 
+server
+.env
+MONGODB_URI=<MONGODB_URI>
+
 ```
 
 4. Start the application:
@@ -45,6 +49,22 @@ For server: npm run dev
 ## Ports Used
 * `:3000` - Client application runs on this port.
 * `:8000` - Server and WebSocket services are hosted on this port.
-    
+
+## Docker Setup (Only for server)
+
+1. Build docker image
+```
+docker build -t codesocket-server .
+```
+
+2. Run the Docker container
+```
+docker run -d -p 8000:8000 -p 6379:6379 --name codesocket-server
+```    
+
+3. Stop the docker container
+```
+docker stop <container_id>
+```
 
 
