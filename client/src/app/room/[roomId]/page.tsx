@@ -16,6 +16,8 @@ import { IFileExplorerNode } from "@/interfaces/IFileExplorerNode";
 import { IFile } from "@/interfaces/IFile";
 import { IDataPayload } from "@/interfaces/IDataPayload";
 import { v4 as uuid } from "uuid";
+import axios from "axios";
+import Loading from "@/app/components/loading/Loading";
 
 const filesContentMap = new Map<string, IFile>();
 
@@ -37,7 +39,6 @@ const Page = () => {
 
   const [clients, setClients] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
-  const [fontSize, setFontSize] = useState(18);
   const [activeFile, setActiveFile] = useState(initialActiveFile);
   const [files, setFiles] = useState([initialActiveFile]);
   const [fileExplorerData, setFileExplorerData] = useState<IFileExplorerNode>({
@@ -56,6 +57,10 @@ const Page = () => {
     ],
   });
   const [isFileExplorerUpdated, setIsFileExplorerUpdated] = useState(false);
+  const [isOutputExpand, setIsOutputExpand] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [codeOutput, setCodeOutput] = useState("");
+  const [codeStatus, setCodeStatus] = useState("");
 
   const editorRef = useRef(null);
   const socketRef = useRef<Socket | null>(null);
@@ -127,10 +132,77 @@ const Page = () => {
     setActiveFile(file);
   };
 
+  const handleToggleOutputVisibility = () => {
+    setIsOutputExpand(!isOutputExpand);
+  };
+
+  const handleCodeStatus = async (
+    jobId: string,
+    intervalId: NodeJS.Timeout
+  ) => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/code/status/${jobId}`
+      );
+      if (response.status === 200) {
+        console.log(response.data, response.data.job.status);
+        setCodeStatus(response.data.job.status);
+        if (response.data.job.status === "success") {
+          clearInterval(intervalId);
+          setLoading(false);
+          setCodeOutput(response.data.job.output);
+          setIsOutputExpand(true);
+        } else if (response.data.job.status === "failed") {
+          clearInterval(intervalId);
+          setCodeOutput("[Error]: " + JSON.parse(response.data.job.output).stderr);
+          setLoading(false);
+          setIsOutputExpand(true);
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      clearInterval(intervalId);
+      setLoading(false);
+      alert(error);
+    }
+  };
+
+  const handleRunCode = async () => {
+    const data = {
+      code: filesContentMap.get(activeFile.path)?.content,
+      language: activeFile.language,
+      extension: activeFile.name.split(".")[1],
+    };
+    setCodeStatus('')
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/code/execute`,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        }
+      );
+
+      if (response.status === 201) {
+        console.log(response.data);
+        const intervalId = setInterval(async () => {
+          await handleCodeStatus(response.data.jobId, intervalId);
+        }, 500);
+      }
+    } catch (error) {
+      console.log(error);
+      alert(error);
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const usernameFromUrl = query.get("username");
-    const toastId = query.get("toastId")
-    toast.dismiss(toastId!)
+    const toastId = query.get("toastId");
+    toast.dismiss(toastId!);
 
     const init = async () => {
       socketRef.current = await initSocket();
@@ -185,6 +257,7 @@ const Page = () => {
         socketRef.current.disconnect();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -200,6 +273,7 @@ const Page = () => {
       });
       setIsFileExplorerUpdated(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFileExplorerUpdated]);
 
   return (
@@ -267,25 +341,78 @@ const Page = () => {
           })}
         </div>
         {activeFile.name && files.length > 0 ? (
-          <Editor
-            height={"93vh"}
-            path={activeFile.name}
-            defaultLanguage={activeFile.language}
-            defaultValue={activeFile.content}
-            onChange={(value) => handleEditorChange(value)}
-            onMount={handleEditorDidMount}
-            value={filesContentMap.get(activeFile.path)?.content}
-            theme={"vs-dark"}
-            options={{
-              minimap: {
-                enabled: false,
-              },
-              fontSize: fontSize,
-              cursorStyle: "line",
-              lineNumbersMinChars: 4,
-              quickSuggestions: true,
-            }}
-          />
+          <div className="h-[93vh]">
+            <Editor
+              height={isOutputExpand ? "60%" : "86%"}
+              path={activeFile.name}
+              defaultLanguage={activeFile.language}
+              defaultValue={activeFile.content}
+              onChange={(value) => handleEditorChange(value)}
+              onMount={handleEditorDidMount}
+              value={filesContentMap.get(activeFile.path)?.content}
+              theme={"vs-dark"}
+              options={{
+                minimap: {
+                  enabled: false,
+                },
+                fontSize: 18,
+                cursorStyle: "line",
+                lineNumbersMinChars: 4,
+                quickSuggestions: true,
+              }}
+            />
+            <div className={isOutputExpand ? "h-[40%]" : "h-[10%]"}>
+              <div className="bg-[#252522] border-t rounded-sm border-[#aaaaaa50]">
+                <div
+                  onClick={handleToggleOutputVisibility}
+                  className="bg-[#1e1e1e] cursor-pointer flex items-center justify-between bg-transparent text-[#f29221] px-4 py-2 font-semibold"
+                >
+                  <span>Output</span>
+                  <span>
+                    <svg
+                      className={
+                        "w-3 h-3 shrink-0 " +
+                        (isOutputExpand ? "rotate-180" : "rotate-0")
+                      }
+                      aria-hidden="true"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 10 6"
+                    >
+                      <path
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 5 5 1 1 5"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                {isOutputExpand && (
+                  <textarea
+                    value={codeOutput}
+                    readOnly
+                    className="px-5 py-2 w-full h-[160px] outline-none bg-[#252522] text-white overflow-auto resize-none"
+                  />
+                )}
+              </div>
+              <div className="flex justify-end items-center px-5 py-2 border-t border-t-[#aaaaaa50]">
+                <button
+                  type="button"
+                  onClick={handleRunCode}
+                  className="py-2 px-10 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#fec76f] hover:bg-[#fec76fe6] text-[#000]"
+                  id="hs-basic-collapse"
+                  aria-expanded="false"
+                  aria-controls="hs-basic-collapse-heading"
+                  data-hs-collapse="#hs-basic-collapse-heading"
+                  disabled={loading}
+                >
+                  {loading ? <Loading status={codeStatus} /> : "Run"}
+                </button>
+              </div>
+            </div>
+          </div>
         ) : (
           <div className="text-xl text-[#aaaaaa] flex items-center justify-center h-[93vh]">
             No file is open.

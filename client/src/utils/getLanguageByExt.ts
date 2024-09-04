@@ -7,7 +7,7 @@ const extensionToLanguageMap: { [key: string]: string } = {
   rb: "ruby",
   java: "java",
   kt: "kotlin",
-  cpp: "c++",
+  cpp: "cpp",
   c: "c",
   cs: "c#",
   go: "go",
