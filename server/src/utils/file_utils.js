@@ -8,13 +8,9 @@ const createDir = async (dirPath) => {
   }
 };
 
-const removeDir = async (dirPath) => {
-    const files = await readdir(dirPath)
-    for (const file of files) {
-        await rm(`${dirPath}/${file}`)
-    }
-    await rmdir(dirPath)
-}
+const removeFile = async (filePath) => {
+  await rm(filePath);
+};
 
 const generateFile = async (extension, code) => {
   const filename = `${new Date().getTime()}.${extension}`;
@@ -23,4 +19,4 @@ const generateFile = async (extension, code) => {
   return `codes/${filename}`;
 };
 
-export default { generateFile, createDir, removeDir }
+export default { generateFile, createDir, removeFile };

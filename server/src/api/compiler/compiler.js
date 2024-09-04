@@ -33,8 +33,7 @@ const executeCode = async (filePath, language) => {
 
 const executeCompiler = async (filePath, language) => {
   const response = await executeCode(filePath, language)
-  await fileUtils.removeDir('codes')
-  await fileUtils.removeDir('outputs')
+  await fileUtils.removeFile(filePath)
   return response;
 };
 
