@@ -136,6 +136,29 @@ const Page = () => {
     setIsOutputExpand(!isOutputExpand);
   };
 
+  const handleSendCodeOutputData = ({
+    status,
+    output,
+  }: {
+    status: string;
+    output: string;
+  }) => {
+    const dataPayload: IDataPayload = {
+      fileExplorerData,
+      openFiles: files,
+      activeFile,
+      codeOutputData: {
+        status,
+        output,
+      },
+    };
+
+    socketRef.current!.emit(ACTIONS.CODE_CHANGE, {
+      roomId,
+      payload: dataPayload,
+    });
+  };
+
   const handleCodeStatus = async (
     jobId: string,
     intervalId: NodeJS.Timeout
@@ -145,25 +168,29 @@ const Page = () => {
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/code/status/${jobId}`
       );
       if (response.status === 200) {
-        console.log(response.data, response.data.job.status);
+        const status = response.data.job.status;
         setCodeStatus(response.data.job.status);
+        handleSendCodeOutputData({ status, output: "" });
         if (response.data.job.status === "success") {
-          clearInterval(intervalId);
-          setLoading(false);
-          setCodeOutput(response.data.job.output);
+          const output = response.data.job.output;
+          setCodeOutput(output);
           setIsOutputExpand(true);
+          handleSendCodeOutputData({ status, output });
         } else if (response.data.job.status === "failed") {
-          clearInterval(intervalId);
-          setCodeOutput("[Error]: " + JSON.parse(response.data.job.output).stderr);
-          setLoading(false);
+          const output =
+            "[Error]: " + JSON.parse(response.data.job.output).stderr;
+          setCodeOutput(output);
           setIsOutputExpand(true);
+          handleSendCodeOutputData({ status, output });
         }
       }
     } catch (error) {
       console.log(error);
-      clearInterval(intervalId);
       setLoading(false);
       alert(error);
+    } finally {
+      clearInterval(intervalId);
+      setLoading(false);
     }
   };
 
@@ -173,9 +200,10 @@ const Page = () => {
       language: activeFile.language,
       extension: activeFile.name.split(".")[1],
     };
-    setCodeStatus('')
+    setCodeStatus("");
     try {
       setLoading(true);
+      handleSendCodeOutputData({ status: "loading", output: "" });
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/code/execute`,
         data,
@@ -239,10 +267,20 @@ const Page = () => {
       socketRef.current.on(
         ACTIONS.CODE_CHANGE,
         ({ payload }: { payload: IDataPayload }) => {
-          setActiveFile(payload.activeFile);
-          setFileExplorerData(payload.fileExplorerData);
-          setFiles(payload.openFiles);
-          filesContentMap.set(payload.activeFile.path, payload.activeFile);
+          if (payload.codeOutputData) {
+            setCodeOutput(payload.codeOutputData.output);
+            setCodeStatus(payload.codeOutputData.status);
+            setLoading(
+              ["loading", "pending"].includes(payload.codeOutputData.status)
+            );
+            ["success", "failed"].includes(payload.codeOutputData.status) &&
+              setIsOutputExpand(true);
+          } else {
+            setActiveFile(payload.activeFile);
+            setFileExplorerData(payload.fileExplorerData);
+            setFiles(payload.openFiles);
+            filesContentMap.set(payload.activeFile.path, payload.activeFile);
+          }
         }
       );
     };
