@@ -15,9 +15,10 @@ const initApiRoutes = (app) => {
 
       job = await createJob({ filePath, language });
       await addJobToQueue(job._id);
-      res.status(201).json({ success: true, jobId: job._id });
+      return res.status(201).json({ success: true, jobId: job._id });
     } catch (error) {
-      return res.status(500).json({ error });
+      console.log(error)
+      return res.status(500).json({ error: `Something went wrong!` });
     }
   });
 
@@ -30,7 +31,7 @@ const initApiRoutes = (app) => {
     }
     try {
       const job = await getJobById(jobId);
-      return res.status(200).json({ success: false, job });
+      return res.status(200).json({ success: true, job });
     } catch (error) {
       return res.status(500).json({ error });
     }
