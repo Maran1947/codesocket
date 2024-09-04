@@ -10,13 +10,13 @@ const executeCode = async (filePath, language) => {
     case "cpp":
       const filename = path.basename(filePath).split(".")[0];
       const outputFilePath = `outputs/${filename}.out`;
-      executeCodeCommand = `g++ ${filePath} -o ${outputFilePath} && cd outputs && ${filename}.out`;
+      executeCodeCommand = `g++ ${filePath} -o ${outputFilePath} && cd outputs && ./${filename}.out`;
       break;
     case "javascript":
       executeCodeCommand = `node ${filePath}`;
       break;
     case "python":
-      executeCodeCommand = `python ${filePath}`;
+      executeCodeCommand = `python3 ${filePath}`;
       break;
     default:
       throw new Error("Unsupported / Not found code language: ", { language });
