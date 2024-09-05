@@ -9,6 +9,7 @@ import {
 import { v4 as uuid } from "uuid";
 import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 
 export default function Home() {
   const [roomId, setRoomId] = useState("");
@@ -39,9 +40,9 @@ export default function Home() {
   const handleJoinRoom = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    const toastId = toast.loading("Joining...");
+    setToastId(toastId);
     startTransition(() => {
-      const toastId = toast.loading("Joining...");
-      setToastId(toastId);
       router.replace(`/room/${roomId}?username=${username}&toastId=${toastId}`);
     });
   };
@@ -56,7 +57,20 @@ export default function Home() {
     if (!isPending && toastId) {
       toast.dismiss(toastId);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPending]);
+
+  // To activate the server
+  const handleServerWakeUp = async () => {
+    try {
+      await axios.get(process.env.NEXT_PUBLIC_BACKEND_URL!)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+  useEffect(() => {
+    handleServerWakeUp()
+  }, [])
 
   return (
     <main className="bg-[#17181d] flex min-h-screen flex-col items-center justify-between py-24 px-10 sm:p-24">
