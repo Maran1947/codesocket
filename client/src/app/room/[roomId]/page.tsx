@@ -175,22 +175,24 @@ const Page = () => {
           const output = response.data.job.output;
           setCodeOutput(output);
           setIsOutputExpand(true);
+          setLoading(false);
+          clearInterval(intervalId);
           handleSendCodeOutputData({ status, output });
         } else if (response.data.job.status === "failed") {
           const output =
             "[Error]: " + JSON.parse(response.data.job.output).stderr;
           setCodeOutput(output);
           setIsOutputExpand(true);
+          setLoading(false);
+          clearInterval(intervalId);
           handleSendCodeOutputData({ status, output });
         }
       }
     } catch (error) {
       console.log(error);
       setLoading(false);
-      alert(error);
-    } finally {
       clearInterval(intervalId);
-      setLoading(false);
+      alert(error);
     }
   };
 
@@ -200,6 +202,12 @@ const Page = () => {
       language: activeFile.language,
       extension: activeFile.name.split(".")[1],
     };
+    
+    if (!['cpp','python','js'].includes(data.extension)) {
+       toast.error(`Unsupported programming language (${data.language}). Supported languages are C++, Python, and JavaScript.`)
+        return
+    }
+
     setCodeStatus("");
     try {
       setLoading(true);
@@ -267,6 +275,7 @@ const Page = () => {
       socketRef.current.on(
         ACTIONS.CODE_CHANGE,
         ({ payload }: { payload: IDataPayload }) => {
+          console.log('WS: ',payload)
           if (payload.codeOutputData) {
             setCodeOutput(payload.codeOutputData.output);
             setCodeStatus(payload.codeOutputData.status);
