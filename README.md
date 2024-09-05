@@ -59,7 +59,7 @@ docker build -t codesocket-server .
 
 2. Run the Docker container
 ```
-docker run -d -p 8000:8000 -p 6379:6379 --name codesocket-server
+docker run -d -p 8000:8000 -p 6379:6379 codesocket-server
 ```    
 
 3. Stop the docker container
