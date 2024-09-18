@@ -1,7 +1,8 @@
 # CodeSocket
 A real-time code editor with a file explorer functionality.
 
-![image](https://github.com/user-attachments/assets/02d9dad0-725c-4569-bf56-7f9ef34c13af)
+![image](https://github.com/user-attachments/assets/d3499a78-7b85-4ad9-a4f8-e990d46a9b45)
+![image](https://github.com/user-attachments/assets/80a04fd2-f6ba-42e2-8204-5079420a83c5)
 
 ## ⚙ Installation
 
