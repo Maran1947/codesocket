@@ -16,7 +16,7 @@ import { IFileExplorerNode } from "@/interfaces/IFileExplorerNode";
 import { IFile } from "@/interfaces/IFile";
 import { IDataPayload } from "@/interfaces/IDataPayload";
 import { v4 as uuid } from "uuid";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import Loading from "@/app/components/loading/Loading";
 
 const filesContentMap = new Map<string, IFile>();
@@ -203,7 +203,7 @@ const Page = () => {
       extension: activeFile.name.split(".")[1],
     };
     
-    if (!['cpp','python','js'].includes(data.extension)) {
+    if (!['cpp','py','js'].includes(data.extension)) {
        toast.error(`Unsupported programming language (${data.language}). Supported languages are C++, Python, and JavaScript.`)
         return
     }
@@ -223,14 +223,18 @@ const Page = () => {
       );
 
       if (response.status === 201) {
-        console.log(response.data);
         const intervalId = setInterval(async () => {
           await handleCodeStatus(response.data.jobId, intervalId);
         }, 500);
       }
     } catch (error) {
       console.log(error);
-      alert(error);
+      if ((error as AxiosError).status === 503) {
+        toast.error("Service is temporarily unavailable!")
+      } else {
+        toast.error("Internal server error!");
+      }
+    } finally {
       setLoading(false);
     }
   };
@@ -407,6 +411,7 @@ const Page = () => {
                 lineNumbersMinChars: 4,
                 quickSuggestions: true,
               }}
+              loading={<Loading status="Initializing..." color="#f29221" />}
             />
             <div className={isOutputExpand ? "h-[40%]" : "h-[10%]"}>
               <div className="bg-[#252522] border-t rounded-sm border-[#aaaaaa50]">
