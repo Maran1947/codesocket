@@ -8,21 +8,32 @@ const initApiRoutes = (app) => {
   });
 
   app.post("/api/code/execute", async (req, res) => {
+    if (process.env.ALLOW_COMPILER_API === 'false') {
+      return res
+        .status(503)
+        .json({ error: "Service is temporarily unavailable!" });
+    }
+
     const { language, extension, code } = req.body;
     let job = null;
     try {
       const filePath = await fileUtils.generateFile(extension, code);
-
       job = await createJob({ filePath, language });
       await addJobToQueue(job._id);
       return res.status(201).json({ success: true, jobId: job._id });
     } catch (error) {
-      console.log(error)
+      console.log(error);
       return res.status(500).json({ error: `Something went wrong!` });
     }
   });
 
   app.get("/api/code/status/:jobId", async (req, res) => {
+    if (process.env.ALLOW_COMPILER_API === 'false') {
+      return res
+        .status(503)
+        .json({ error: "Service is temporarily unavailable!" });
+    }
+
     const { jobId } = req.params;
     if (!jobId) {
       return res
