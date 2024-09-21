@@ -234,6 +234,7 @@ const Page = () => {
       } else {
         toast.error("Internal server error!");
       }
+      setLoading(false)
     }
   };
 
