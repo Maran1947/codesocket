@@ -5,7 +5,7 @@ const Header = () => {
     <header>
       <nav className="border-gray-200 px-4 lg:px-6 py-2.5">
         <div className="flex flex-wrap justify-between items-center mx-auto max-w-screen-xl">
-          <a href="https://flowbite.com" className="flex items-center rounded-lg border-y-2 border-b-[var(--brand-color)] outline-none">
+          <a href="/" className="flex items-center rounded-lg border-y-2 border-b-[var(--brand-color)] outline-none">
             <span className="self-center text-white text-xl font-semibold whitespace-nowrap">
               Code<span className="text-[var(--brand-color)]" >Socket</span>
             </span>
